@@ -3,7 +3,7 @@ bl_info = {
     "blender": (2, 80, 0),
     "category": "Mesh",
     "author": "Abraham Oosterhuis",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
 }
 
 import bpy
@@ -37,7 +37,16 @@ class FormQuadrilateralOperator(Operator):
 
         # Set pivot point to 3D cursor and move cursor to the middle of the selected vertices
         context.scene.tool_settings.transform_pivot_point = 'CURSOR'
-        context.scene.cursor.location = (context.object.data.vertices[vert1].co + context.object.data.vertices[vert2].co) / 2
+        # Place the cursor inbetween the 2 vertices that are in the middle of the quadrilateral
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
+        context.active_object.data.vertices[vert1].select = True
+        context.active_object.data.vertices[vert2].select = True      
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_mode(type="VERT")
+        bpy.ops.view3d.snap_cursor_to_selected()
 
         print("Set Pivot Point to Cursor")
         
@@ -52,11 +61,12 @@ class FormQuadrilateralOperator(Operator):
         bpy.ops.mesh.duplicate()
 
         print("Duplicated Vertex")
-        
+
         #we need to override the context of our operator    
         override = self.get_override(context, 'VIEW_3D', 'WINDOW')
         # Mirror the duplicate on x, y, and z axes
-        bpy.ops.transform.mirror(override, orient_type='GLOBAL', constraint_axis=(True, True, True))
+        
+        bpy.ops.transform.mirror(orient_type='GLOBAL', constraint_axis=(True, True, True))
         
         #save mirrored vertex for future reference
         bpy.ops.object.mode_set(mode='OBJECT')
